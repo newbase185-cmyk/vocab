@@ -44,6 +44,24 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* ── 背景小贴纸 ── */
+    .sticker {
+      position: fixed;
+      font-size: 28px;
+      opacity: 0.13;
+      pointer-events: none;
+      user-select: none;
+      z-index: 0;
+      animation: stickerFloat 6s ease-in-out infinite;
+    }
+    .sticker:nth-child(odd)  { animation-direction: alternate; }
+    .sticker:nth-child(even) { animation-direction: alternate-reverse; }
+    @keyframes stickerFloat {
+      0%   { transform: translateY(0px) rotate(var(--r, 0deg)); }
+      100% { transform: translateY(-12px) rotate(var(--r2, 5deg)); }
     }
 
     /* ── Header ── */
@@ -584,6 +602,20 @@
   </style>
 </head>
 <body>
+
+<!-- 背景小贴纸 -->
+<span class="sticker" style="top:4%;left:3%;--r:-15deg;--r2:5deg;animation-duration:7s;">🌸</span>
+<span class="sticker" style="top:8%;right:5%;--r:10deg;--r2:-8deg;animation-duration:5s;">⭐</span>
+<span class="sticker" style="top:18%;left:8%;--r:20deg;--r2:-5deg;animation-duration:8s;">🍭</span>
+<span class="sticker" style="top:25%;right:3%;--r:-10deg;--r2:15deg;animation-duration:6s;">🎀</span>
+<span class="sticker" style="top:40%;left:2%;--r:5deg;--r2:-20deg;animation-duration:9s;">🌷</span>
+<span class="sticker" style="top:50%;right:6%;--r:-8deg;--r2:12deg;animation-duration:7s;">✨</span>
+<span class="sticker" style="top:62%;left:5%;--r:15deg;--r2:-6deg;animation-duration:6s;">🍬</span>
+<span class="sticker" style="top:70%;right:4%;--r:-12deg;--r2:8deg;animation-duration:8s;">🌼</span>
+<span class="sticker" style="top:80%;left:3%;--r:8deg;--r2:-15deg;animation-duration:5s;">💕</span>
+<span class="sticker" style="top:88%;right:7%;--r:-5deg;--r2:18deg;animation-duration:7s;">🦋</span>
+<span class="sticker" style="top:33%;left:90%;--r:12deg;--r2:-8deg;animation-duration:6s;">🌟</span>
+<span class="sticker" style="top:55%;left:92%;--r:-10deg;--r2:6deg;animation-duration:9s;">🍡</span>
 
 <div class="header">
   <h1>✦ 我要成为英语大师 ✦</h1>
