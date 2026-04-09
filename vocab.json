@@ -13,7 +13,9 @@
       "sm2_interval": 1,
       "sm2_easiness": 2.5,
       "sm2_reps": 0,
-      "review_history": []
+      "review_history": [],
+      "audio_word": "audio/on_the_same_page.mp3",
+      "audio_example": "audio/ex_on_the_same_page.mp3"
     },
     {
       "word": "make a point",
@@ -28,7 +30,9 @@
       "sm2_interval": 1,
       "sm2_easiness": 2.5,
       "sm2_reps": 0,
-      "review_history": []
+      "review_history": [],
+      "audio_word": "audio/make_a_point.mp3",
+      "audio_example": "audio/ex_make_a_point.mp3"
     },
     {
       "word": "nail it",
@@ -43,7 +47,9 @@
       "sm2_interval": 1,
       "sm2_easiness": 2.5,
       "sm2_reps": 0,
-      "review_history": []
+      "review_history": [],
+      "audio_word": "audio/nail_it.mp3",
+      "audio_example": "audio/ex_nail_it.mp3"
     },
     {
       "word": "endeavor",
@@ -58,7 +64,9 @@
       "sm2_interval": 1,
       "sm2_easiness": 2.5,
       "sm2_reps": 0,
-      "review_history": []
+      "review_history": [],
+      "audio_word": "audio/endeavor.mp3",
+      "audio_example": "audio/ex_endeavor.mp3"
     },
     {
       "word": "pull off",
@@ -73,7 +81,9 @@
       "sm2_interval": 1,
       "sm2_easiness": 2.5,
       "sm2_reps": 0,
-      "review_history": []
+      "review_history": [],
+      "audio_word": "audio/pull_off.mp3",
+      "audio_example": "audio/ex_pull_off.mp3"
     }
   ],
   "last_updated": "2026-04-09"
