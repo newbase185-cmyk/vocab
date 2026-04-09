@@ -50,8 +50,8 @@
     /* ── 背景小贴纸 ── */
     .sticker {
       position: fixed;
-      font-size: 28px;
-      opacity: 0.13;
+      font-size: 52px;
+      opacity: 0.2;
       pointer-events: none;
       user-select: none;
       z-index: 0;
@@ -597,7 +597,7 @@
       .header, .tabs, .content { padding-left: 16px; padding-right: 16px; }
       .quiz-word { font-size: 32px; }
       .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
-      .stat-card .num { font-size: 28px; }
+      .stat-card .num { font-size: 52px; }
     }
   </style>
 </head>
@@ -745,7 +745,7 @@
       </div>
     </div>
 
-    <div class="section-title">最近加入 ✿</div>
+    <div class="section-title">今日新词 ✿</div>
     <div class="recent-list" id="recent-list"><div class="loading">加载中…</div></div>
   </div>
 
@@ -1303,17 +1303,20 @@ function renderProgress() {
     }
   });
 
-  // Recent
-  const recent = [...VOCAB_DATA]
-    .sort((a, b) => (b.added || '').localeCompare(a.added || ''))
-    .slice(0, 5);
-
-  document.getElementById('recent-list').innerHTML = recent.map(w => `
-    <div class="recent-item">
-      <span class="recent-word">${w.word} <span style="color:var(--text2);font-weight:600">${w.chinese}</span></span>
-      <span class="recent-date">${fmtDate(w.added)}</span>
-    </div>
-  `).join('');
+  // 今日新词
+  const todayDate = todayStr();
+  const todayNew = VOCAB_DATA.filter(w => w.added === todayDate).slice(0, 8);
+  const recentEl = document.getElementById('recent-list');
+  if (todayNew.length === 0) {
+    recentEl.innerHTML = `<div style="color:var(--text2);font-size:13px;padding:12px 0;">今天还没有新词推送</div>`;
+  } else {
+    recentEl.innerHTML = todayNew.map(w => `
+      <div class="recent-item">
+        <span class="recent-word">${w.word} <span style="color:var(--text2);font-weight:600">${w.chinese}</span></span>
+        <span class="recent-date">${w.phonetic || ''}</span>
+      </div>
+    `).join('');
+  }
 }
 
 // ═══════════════════════════════════════════
