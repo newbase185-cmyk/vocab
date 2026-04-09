@@ -614,35 +614,40 @@ const LS_KEY = 'vocab_data_v1';
 //  SM-2 ALGORITHM
 // ═══════════════════════════════════════════
 // ── Speech (TTS) ──
-function speakText(text) {
-  if (!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.lang = 'en-US';
-  utter.rate = 0.9;
-  // 优先选英语声音
-  const voices = window.speechSynthesis.getVoices();
-  const enVoice = voices.find(v => v.lang.startsWith('en') && !v.localService === false)
-    || voices.find(v => v.lang.startsWith('en'));
-  if (enVoice) utter.voice = enVoice;
-  window.speechSynthesis.speak(utter);
+// ── Audio playback (预生成 mp3) ──
+let currentAudio = null;
+
+function playAudio(url) {
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  const a = new Audio(url);
+  currentAudio = a;
+  a.play().catch(e => console.warn('播放失败:', e));
 }
 
 function speakWord(i) {
   const w = todayWords[i];
   if (!w) return;
-  // 先读单词，再读例句
-  speakText(w.word + '. ' + w.example);
+  if (w.audio_word) {
+    playAudio(w.audio_word);
+  }
+}
+
+function speakText(audioUrl) {
+  // audioUrl 现在直接是音频路径
+  if (audioUrl && (audioUrl.endsWith('.mp3') || audioUrl.startsWith('audio/'))) {
+    playAudio(audioUrl);
+  }
 }
 
 function speakQuizWord() {
   const w = todayWords[quizIndex];
   if (!w) return;
-  speakText(w.word);
+  if (w.audio_word) playAudio(w.audio_word);
 }
 
-// 页面加载后预热 voices
-window.speechSynthesis && window.speechSynthesis.getVoices();
+function speakLib(audioUrl) {
+  if (audioUrl) playAudio(audioUrl);
+}
 
 function sm2Update(word, quality) {
   // quality: 0=不知道, 3=模糊, 5=知道
@@ -797,7 +802,7 @@ function renderToday() {
       <div class="word-main">
         <h2>${w.word}</h2>
         ${w.phonetic ? `<span class="phonetic">${w.phonetic}</span>` : ''}
-        <button class="speak-btn" onclick="speakWord(${i})" title="朗读单词">🔊</button>
+        ${w.audio_word ? `<button class="speak-btn" onclick="speakWord(${i})" title="朗读单词">🔊</button>` : ''}
       </div>
       <div class="chinese-meaning">${w.chinese}</div>
       <div class="meta-row">
@@ -808,7 +813,7 @@ function renderToday() {
         <div class="meta-item">
           <span class="meta-label">例句</span>
           <span class="meta-value example-text">${w.example}
-            <button class="speak-btn speak-example" onclick="speakText('${w.example.replace(/'/g, "\\'")}')" title="朗读例句">🔊</button>
+            ${w.audio_example ? `<button class="speak-btn speak-example" onclick="speakText('${w.audio_example}')" title="朗读例句">🔊</button>` : ''}
           </span>
         </div>
       </div>
@@ -950,7 +955,7 @@ function renderLibrary() {
       <div class="vocab-list-left">
         <div class="vocab-list-word">
           ${w.word}
-          <button class="speak-btn speak-inline" onclick="speakText('${w.word.replace(/'/g, "\\'")}')" title="朗读">🔊</button>
+          ${w.audio_word ? `<button class="speak-btn speak-inline" onclick="speakLib('${w.audio_word}')" title="朗读">🔊</button>` : ''}
         </div>
         <div class="vocab-list-cn">${w.chinese}</div>
       </div>
