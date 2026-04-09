@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>词汇学习 · 承太郎</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f10;
+      --bg2: #18181b;
+      --bg3: #232329;
+      --border: #2e2e35;
+      --text: #e4e4e7;
+      --text2: #a1a1aa;
+      --text3: #71717a;
+      --accent: #6e63f0;
+      --accent-dim: rgba(110,99,240,0.15);
+      --green: #22c55e;
+      --yellow: #eab308;
+      --red: #ef4444;
+      --tag-new: #1a3a2a;
+      --tag-new-text: #4ade80;
+      --tag-mid: #2a2a1a;
+      --tag-mid-text: #facc15;
+      --tag-done: #1a2a3a;
+      --tag-done-text: #60a5fa;
+      --radius: 10px;
+      --radius-sm: 6px;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    .header {
+      padding: 20px 24px 0;
+      max-width: 720px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    .header h1 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.3px;
+    }
+    .header h1 span { color: var(--accent); }
+    .header p { font-size: 13px; color: var(--text3); margin-top: 2px; }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      padding: 16px 24px 0;
+      max-width: 720px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    .tab-btn {
+      padding: 7px 16px;
+      border-radius: 20px;
+      border: none;
+      background: transparent;
+      color: var(--text2);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .tab-btn:hover { background: var(--bg3); color: var(--text); }
+    .tab-btn.active { background: var(--accent-dim); color: var(--accent); }
+
+    /* ── Content ── */
+    .content {
+      flex: 1;
+      padding: 20px 24px 40px;
+      max-width: 720px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ── Section title ── */
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 14px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      margin-bottom: 12px;
+    }
+    .card:last-child { margin-bottom: 0; }
+
+    /* ── Word card (today) ── */
+    .word-main {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .word-main h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.5px;
+    }
+    .phonetic {
+      font-size: 13px;
+      color: var(--text3);
+      font-family: monospace;
+    }
+    .chinese-meaning {
+      font-size: 15px;
+      color: var(--text);
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    .meta-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .meta-item {
+      display: flex;
+      gap: 8px;
+      font-size: 13px;
+    }
+    .meta-label {
+      color: var(--text3);
+      white-space: nowrap;
+      min-width: 36px;
+    }
+    .meta-value { color: var(--text2); line-height: 1.5; }
+    .example-text {
+      color: var(--text);
+      font-style: italic;
+      background: var(--bg3);
+      border-left: 2px solid var(--accent);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      line-height: 1.6;
+      margin-top: 2px;
+    }
+
+    /* ── Status tag ── */
+    .status-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .status-tag.new { background: var(--tag-new); color: var(--tag-new-text); }
+    .status-tag.learning { background: var(--tag-mid); color: var(--tag-mid-text); }
+    .status-tag.mastered { background: var(--tag-done); color: var(--tag-done-text); }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 18px;
+      border-radius: var(--radius-sm);
+      border: none;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-ghost { background: var(--bg3); color: var(--text2); border: 1px solid var(--border); }
+    .btn-ghost:hover { color: var(--text); }
+    .btn-know { background: #14532d; color: var(--green); }
+    .btn-know:hover { background: #166534; }
+    .btn-fuzzy { background: #422006; color: var(--yellow); }
+    .btn-fuzzy:hover { background: #713f12; }
+    .btn-nope { background: #450a0a; color: var(--red); }
+    .btn-nope:hover { background: #7f1d1d; }
+
+    /* ── Today header row ── */
+    .today-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .today-count {
+      font-size: 13px;
+      color: var(--text3);
+    }
+    .today-count strong { color: var(--text2); }
+
+    /* ── Quiz ── */
+    #quiz-container {
+      display: none;
+    }
+    .quiz-progress {
+      font-size: 13px;
+      color: var(--text3);
+      margin-bottom: 16px;
+    }
+    .quiz-progress span { color: var(--accent); font-weight: 600; }
+    .quiz-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px 24px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .quiz-word {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -1px;
+      margin-bottom: 8px;
+    }
+    .quiz-hint {
+      font-size: 13px;
+      color: var(--text3);
+      margin-bottom: 24px;
+    }
+    .quiz-reveal {
+      background: var(--bg3);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      margin-bottom: 20px;
+      text-align: left;
+      display: none;
+    }
+    .quiz-reveal.shown { display: block; }
+    .quiz-reveal .chinese-meaning { margin-bottom: 8px; }
+    .quiz-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .quiz-show-btn {
+      margin-bottom: 16px;
+    }
+    .quiz-result {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      text-align: center;
+    }
+    .quiz-result h3 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    .quiz-result p { font-size: 14px; color: var(--text2); margin-bottom: 20px; }
+    .result-stats {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    .result-stat { text-align: center; }
+    .result-stat .num { font-size: 28px; font-weight: 700; }
+    .result-stat .label { font-size: 12px; color: var(--text3); margin-top: 2px; }
+    .num.know { color: var(--green); }
+    .num.fuzzy { color: var(--yellow); }
+    .num.nope { color: var(--red); }
+
+    /* ── Vocab library ── */
+    .search-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .search-input {
+      flex: 1;
+      min-width: 160px;
+      padding: 9px 14px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .search-input::placeholder { color: var(--text3); }
+    .search-input:focus { border-color: var(--accent); }
+    .filter-btns { display: flex; gap: 6px; }
+    .filter-btn {
+      padding: 7px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg2);
+      color: var(--text2);
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .filter-btn:hover { background: var(--bg3); }
+    .filter-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+    .vocab-list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 8px;
+      gap: 12px;
+      transition: border-color 0.15s;
+    }
+    .vocab-list-item:hover { border-color: #3e3e47; }
+    .vocab-list-left { flex: 1; min-width: 0; }
+    .vocab-list-word {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .vocab-list-cn {
+      font-size: 13px;
+      color: var(--text3);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .vocab-list-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .vocab-date { font-size: 11px; color: var(--text3); }
+    .vocab-empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text3);
+      font-size: 14px;
+    }
+
+    /* ── Progress ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-card .num {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .stat-card .label { font-size: 12px; color: var(--text3); }
+    .chart-wrap {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .chart-wrap h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text2);
+      margin-bottom: 16px;
+    }
+    .chart-container { position: relative; height: 180px; }
+
+    .recent-list { margin-top: 0; }
+    .recent-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 11px 16px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+    .recent-word { color: var(--text); font-weight: 500; }
+    .recent-date { color: var(--text3); }
+
+    /* ── Empty state ── */
+    .empty-today {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--text3);
+    }
+    .empty-today .emoji { font-size: 40px; margin-bottom: 12px; }
+    .empty-today p { font-size: 14px; }
+
+    /* ── Divider ── */
+    .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+    /* ── Loading ── */
+    .loading {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--text3);
+      font-size: 14px;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      .header, .tabs, .content { padding-left: 16px; padding-right: 16px; }
+      .quiz-word { font-size: 28px; }
+      .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .stat-card .num { font-size: 26px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>词汇 <span>·</span> 承太郎</h1>
+  <p>SM-2 间隔复习 · 个人词库</p>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="today">今日</button>
+  <button class="tab-btn" data-tab="library">词汇库</button>
+  <button class="tab-btn" data-tab="progress">进度</button>
+</div>
+
+<div class="content">
+
+  <!-- ═══ TODAY ═══ -->
+  <div class="panel active" id="panel-today">
+    <div id="today-browse">
+      <div class="today-header">
+        <div class="section-title" style="margin-bottom:0">今日推送</div>
+        <span class="today-count" id="today-count"></span>
+      </div>
+      <div id="today-cards"><div class="loading">加载中…</div></div>
+      <div id="today-empty" class="empty-today" style="display:none">
+        <div class="emoji">🌳</div>
+        <p>今天没有新词，继续保持！</p>
+      </div>
+      <div class="divider" id="today-divider" style="display:none"></div>
+      <div id="quiz-start-row" style="display:none">
+        <button class="btn btn-primary" id="btn-start-quiz">开始测验 →</button>
+      </div>
+    </div>
+
+    <!-- Quiz UI -->
+    <div id="quiz-container">
+      <div id="quiz-body">
+        <div class="quiz-progress">第 <span id="q-current">1</span> / <span id="q-total">3</span> 题</div>
+        <div class="quiz-card">
+          <div class="quiz-word" id="q-word"></div>
+          <div class="quiz-hint">点击查看释义</div>
+          <button class="btn btn-ghost quiz-show-btn" id="btn-show-answer">查看释义</button>
+          <div class="quiz-reveal" id="q-reveal">
+            <div class="chinese-meaning" id="q-cn"></div>
+            <div class="meta-item">
+              <span class="meta-label">例句</span>
+              <span class="meta-value example-text" id="q-example"></span>
+            </div>
+          </div>
+          <div class="quiz-actions" id="quiz-actions" style="display:none">
+            <button class="btn btn-know" id="btn-know">✓ 知道</button>
+            <button class="btn btn-fuzzy" id="btn-fuzzy">~ 模糊</button>
+            <button class="btn btn-nope" id="btn-nope">✕ 不知道</button>
+          </div>
+        </div>
+      </div>
+      <div id="quiz-result" class="quiz-result" style="display:none">
+        <h3>测验完成 🎉</h3>
+        <p>本次复习了 <strong id="res-total"></strong> 个词汇</p>
+        <div class="result-stats">
+          <div class="result-stat">
+            <div class="num know" id="res-know">0</div>
+            <div class="label">知道</div>
+          </div>
+          <div class="result-stat">
+            <div class="num fuzzy" id="res-fuzzy">0</div>
+            <div class="label">模糊</div>
+          </div>
+          <div class="result-stat">
+            <div class="num nope" id="res-nope">0</div>
+            <div class="label">不知道</div>
+          </div>
+        </div>
+        <button class="btn btn-ghost" id="btn-quiz-done">返回今日词汇</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ LIBRARY ═══ -->
+  <div class="panel" id="panel-library">
+    <div class="search-row">
+      <input type="text" class="search-input" id="search-input" placeholder="搜索单词或释义…" />
+      <div class="filter-btns">
+        <button class="filter-btn active" data-filter="all">全部</button>
+        <button class="filter-btn" data-filter="new">🌱</button>
+        <button class="filter-btn" data-filter="learning">🌿</button>
+        <button class="filter-btn" data-filter="mastered">🌳</button>
+      </div>
+    </div>
+    <div id="vocab-list"><div class="loading">加载中…</div></div>
+  </div>
+
+  <!-- ═══ PROGRESS ═══ -->
+  <div class="panel" id="panel-progress">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="num" id="stat-total">—</div>
+        <div class="label">词汇总量</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" style="color:var(--tag-new-text)" id="stat-new">—</div>
+        <div class="label">🌱 新学</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" style="color:var(--tag-mid-text)" id="stat-mid">—</div>
+        <div class="label">🌿 练习中</div>
+      </div>
+    </div>
+    <div class="stats-grid" style="grid-template-columns:1fr 1fr;">
+      <div class="stat-card">
+        <div class="num" style="color:var(--tag-done-text)" id="stat-done">—</div>
+        <div class="label">🌳 已掌握</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="stat-reviewed" style="color:var(--accent)">—</div>
+        <div class="label">本周复习</div>
+      </div>
+    </div>
+
+    <div class="chart-wrap">
+      <h3>词汇状态分布</h3>
+      <div class="chart-container">
+        <canvas id="statusChart"></canvas>
+      </div>
+    </div>
+
+    <div class="section-title">最近加入</div>
+    <div class="recent-list" id="recent-list"><div class="loading">加载中…</div></div>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  STORAGE KEY
+// ═══════════════════════════════════════════
+const LS_KEY = 'vocab_data_v1';
+
+// ═══════════════════════════════════════════
+//  SM-2 ALGORITHM
+// ═══════════════════════════════════════════
+function sm2Update(word, quality) {
+  // quality: 0=不知道, 3=模糊, 5=知道
+  let ef = word.sm2_easiness;
+  let interval = word.sm2_interval;
+  let reps = word.sm2_reps;
+
+  if (quality >= 3) {
+    if (reps === 0) interval = 1;
+    else if (reps === 1) interval = 6;
+    else interval = Math.round(interval * ef);
+    reps += 1;
+  } else {
+    reps = 0;
+    interval = 1;
+  }
+
+  ef = ef + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
+  if (ef < 1.3) ef = 1.3;
+
+  const nextReview = new Date();
+  nextReview.setDate(nextReview.getDate() + interval);
+
+  let status = 'new';
+  if (reps >= 5) status = 'mastered';
+  else if (reps >= 2) status = 'learning';
+
+  return {
+    sm2_easiness: Math.round(ef * 100) / 100,
+    sm2_interval: interval,
+    sm2_reps: reps,
+    next_review: nextReview.toISOString().split('T')[0],
+    status
+  };
+}
+
+// ═══════════════════════════════════════════
+//  DATA LAYER  (localStorage → vocab.json)
+// ═══════════════════════════════════════════
+let VOCAB_DATA = [];   // live working copy
+let quizAnswers = [];  // [{wordIndex, quality}] accumulated during a quiz session
+
+function loadData() {
+  const stored = localStorage.getItem(LS_KEY);
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+      // Merge: if vocab.json has newer entries, they won't be in localStorage.
+      // Strategy: localStorage is authoritative for known words (by word key);
+      // vocab.json words not present in localStorage are appended fresh.
+      return Promise.resolve(parsed.words || parsed);
+    } catch(e) { /* fall through to fetch */ }
+  }
+  return fetch('./vocab.json')
+    .then(r => r.json())
+    .then(data => {
+      // Normalise: ensure review_history exists on every word
+      const words = (data.words || data).map(w => ({
+        review_history: [],
+        ...w
+      }));
+      saveToLocalStorage(words);
+      return words;
+    });
+}
+
+function saveToLocalStorage(words) {
+  localStorage.setItem(LS_KEY, JSON.stringify({ words, saved_at: new Date().toISOString() }));
+}
+
+// Merge fresh vocab.json into existing localStorage data (adds new words only)
+function mergeRemote(localWords, remoteWords) {
+  const localKeys = new Set(localWords.map(w => w.word.toLowerCase()));
+  const newWords = remoteWords
+    .filter(w => !localKeys.has(w.word.toLowerCase()))
+    .map(w => ({ review_history: [], ...w }));
+  return [...localWords, ...newWords];
+}
+
+// ═══════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════
+function statusLabel(s) {
+  if (s === 'new')      return { emoji: '🌱', text: '新学',   cls: 'new' };
+  if (s === 'learning') return { emoji: '🌿', text: '练习中', cls: 'learning' };
+  return                       { emoji: '🌳', text: '已掌握', cls: 'mastered' };
+}
+
+function statusTagHTML(s) {
+  const l = statusLabel(s);
+  return `<span class="status-tag ${l.cls}">${l.emoji} ${l.text}</span>`;
+}
+
+function fmtDate(d) { return d || '—'; }
+
+function weekAgo() {
+  const d = new Date();
+  d.setDate(d.getDate() - 7);
+  return d.toISOString().slice(0, 10);
+}
+
+function todayStr() {
+  return new Date().toISOString().split('T')[0];
+}
+
+// ═══════════════════════════════════════════
+//  TABS
+// ═══════════════════════════════════════════
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ═══════════════════════════════════════════
+//  TODAY TAB
+// ═══════════════════════════════════════════
+let todayWords = [];
+
+function renderToday() {
+  const today = todayStr();
+  // Show words due today or overdue (next_review <= today) OR status=new
+  todayWords = VOCAB_DATA.filter(w =>
+    w.status === 'new' || (w.next_review && w.next_review <= today)
+  );
+
+  const container = document.getElementById('today-cards');
+  const emptyEl   = document.getElementById('today-empty');
+  const countEl   = document.getElementById('today-count');
+  const divider   = document.getElementById('today-divider');
+  const quizRow   = document.getElementById('quiz-start-row');
+
+  if (todayWords.length === 0) {
+    container.innerHTML = '';
+    emptyEl.style.display = 'block';
+    countEl.textContent = '';
+    divider.style.display = 'none';
+    quizRow.style.display = 'none';
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+  countEl.innerHTML = `共 <strong>${todayWords.length}</strong> 个词`;
+  divider.style.display = 'block';
+  quizRow.style.display = 'block';
+
+  container.innerHTML = todayWords.map(w => `
+    <div class="card">
+      <div class="word-main">
+        <h2>${w.word}</h2>
+        ${w.phonetic ? `<span class="phonetic">${w.phonetic}</span>` : ''}
+      </div>
+      <div class="chinese-meaning">${w.chinese}</div>
+      <div class="meta-row">
+        <div class="meta-item">
+          <span class="meta-label">场景</span>
+          <span class="meta-value">${w.scene}</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">例句</span>
+          <span class="meta-value example-text">${w.example}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Quiz logic ──
+let quizIndex   = 0;
+let quizResults = { know: 0, fuzzy: 0, nope: 0 };
+let quizLog     = [];   // [{wordIndex (in VOCAB_DATA), quality}]
+
+document.getElementById('btn-start-quiz').addEventListener('click', startQuiz);
+
+function startQuiz() {
+  document.getElementById('today-browse').style.display = 'none';
+  document.getElementById('quiz-container').style.display = 'block';
+  quizIndex = 0;
+  quizResults = { know: 0, fuzzy: 0, nope: 0 };
+  quizLog = [];
+  showQuizQuestion();
+}
+
+function showQuizQuestion() {
+  const body   = document.getElementById('quiz-body');
+  const result = document.getElementById('quiz-result');
+  body.style.display   = 'block';
+  result.style.display = 'none';
+
+  const w = todayWords[quizIndex];
+  document.getElementById('q-current').textContent = quizIndex + 1;
+  document.getElementById('q-total').textContent   = todayWords.length;
+  document.getElementById('q-word').textContent    = w.word;
+  document.getElementById('q-cn').textContent      = w.chinese;
+  document.getElementById('q-example').textContent = w.example;
+  document.getElementById('q-reveal').classList.remove('shown');
+  document.getElementById('quiz-actions').style.display  = 'none';
+  document.getElementById('btn-show-answer').style.display = 'inline-flex';
+}
+
+document.getElementById('btn-show-answer').addEventListener('click', () => {
+  document.getElementById('q-reveal').classList.add('shown');
+  document.getElementById('quiz-actions').style.display  = 'flex';
+  document.getElementById('btn-show-answer').style.display = 'none';
+});
+
+function recordAnswer(quality) {
+  if (quality === 5) quizResults.know++;
+  else if (quality === 3) quizResults.fuzzy++;
+  else quizResults.nope++;
+
+  quizLog.push({ word: todayWords[quizIndex], quality });
+  quizIndex++;
+
+  if (quizIndex < todayWords.length) {
+    showQuizQuestion();
+  } else {
+    applyQuizResults();
+    showQuizResult();
+  }
+}
+
+document.getElementById('btn-know').addEventListener('click',  () => recordAnswer(5));
+document.getElementById('btn-fuzzy').addEventListener('click', () => recordAnswer(3));
+document.getElementById('btn-nope').addEventListener('click',  () => recordAnswer(0));
+
+function applyQuizResults() {
+  const today = todayStr();
+
+  quizLog.forEach(({ word, quality }) => {
+    // Find the word in VOCAB_DATA by reference match (word string)
+    const idx = VOCAB_DATA.findIndex(w => w.word === word.word);
+    if (idx === -1) return;
+
+    const updates = sm2Update(VOCAB_DATA[idx], quality);
+    const historyEntry = {
+      date: today,
+      quality,
+      interval: updates.sm2_interval,
+    };
+
+    VOCAB_DATA[idx] = {
+      ...VOCAB_DATA[idx],
+      ...updates,
+      review_history: [...(VOCAB_DATA[idx].review_history || []), historyEntry]
+    };
+  });
+
+  // Persist to localStorage
+  saveToLocalStorage(VOCAB_DATA);
+}
+
+function showQuizResult() {
+  document.getElementById('quiz-body').style.display = 'none';
+  const result = document.getElementById('quiz-result');
+  result.style.display = 'block';
+  document.getElementById('res-total').textContent = todayWords.length;
+  document.getElementById('res-know').textContent  = quizResults.know;
+  document.getElementById('res-fuzzy').textContent = quizResults.fuzzy;
+  document.getElementById('res-nope').textContent  = quizResults.nope;
+}
+
+document.getElementById('btn-quiz-done').addEventListener('click', () => {
+  document.getElementById('quiz-container').style.display  = 'none';
+  document.getElementById('today-browse').style.display = 'block';
+  // Re-render with updated data
+  renderToday();
+  renderProgress();
+});
+
+// ═══════════════════════════════════════════
+//  LIBRARY TAB
+// ═══════════════════════════════════════════
+let currentFilter = 'all';
+let currentSearch = '';
+
+function renderLibrary() {
+  const list = document.getElementById('vocab-list');
+  let items = VOCAB_DATA;
+
+  if (currentFilter !== 'all') {
+    items = items.filter(w => w.status === currentFilter);
+  }
+  if (currentSearch.trim()) {
+    const q = currentSearch.trim().toLowerCase();
+    items = items.filter(w =>
+      w.word.toLowerCase().includes(q) ||
+      w.chinese.toLowerCase().includes(q)
+    );
+  }
+
+  if (items.length === 0) {
+    list.innerHTML = `<div class="vocab-empty">没有找到匹配的词汇</div>`;
+    return;
+  }
+
+  list.innerHTML = items.map(w => `
+    <div class="vocab-list-item">
+      <div class="vocab-list-left">
+        <div class="vocab-list-word">${w.word}</div>
+        <div class="vocab-list-cn">${w.chinese}</div>
+      </div>
+      <div class="vocab-list-right">
+        ${statusTagHTML(w.status)}
+        <span class="vocab-date">${fmtDate(w.added)}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+document.getElementById('search-input').addEventListener('input', e => {
+  currentSearch = e.target.value;
+  renderLibrary();
+});
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    renderLibrary();
+  });
+});
+
+// ═══════════════════════════════════════════
+//  PROGRESS TAB
+// ═══════════════════════════════════════════
+let chartInstance = null;
+
+function renderProgress() {
+  const total      = VOCAB_DATA.length;
+  const newCount   = VOCAB_DATA.filter(w => w.status === 'new').length;
+  const midCount   = VOCAB_DATA.filter(w => w.status === 'learning').length;
+  const doneCount  = VOCAB_DATA.filter(w => w.status === 'mastered').length;
+  const weekAgoStr = weekAgo();
+  const reviewed   = VOCAB_DATA.filter(w => w.next_review && w.next_review >= weekAgoStr).length;
+
+  document.getElementById('stat-total').textContent    = total;
+  document.getElementById('stat-new').textContent      = newCount;
+  document.getElementById('stat-mid').textContent      = midCount;
+  document.getElementById('stat-done').textContent     = doneCount;
+  document.getElementById('stat-reviewed').textContent = reviewed;
+
+  // Chart — destroy previous instance if exists
+  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+  const ctx = document.getElementById('statusChart').getContext('2d');
+  chartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['🌱 新学', '🌿 练习中', '🌳 已掌握'],
+      datasets: [{
+        data: [newCount, midCount, doneCount],
+        backgroundColor: ['#14532d', '#422006', '#1e3a5f'],
+        borderColor: ['#22c55e', '#eab308', '#60a5fa'],
+        borderWidth: 1.5,
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: {
+            color: '#a1a1aa',
+            font: { size: 13 },
+            padding: 16,
+            boxWidth: 12,
+            boxHeight: 12
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.label}: ${ctx.parsed} 个 (${total ? Math.round(ctx.parsed / total * 100) : 0}%)`
+          }
+        }
+      },
+      cutout: '65%'
+    }
+  });
+
+  // Recent
+  const recent = [...VOCAB_DATA]
+    .sort((a, b) => (b.added || '').localeCompare(a.added || ''))
+    .slice(0, 5);
+
+  document.getElementById('recent-list').innerHTML = recent.map(w => `
+    <div class="recent-item">
+      <span class="recent-word">${w.word} <span style="color:var(--text3);font-weight:400">${w.chinese}</span></span>
+      <span class="recent-date">${fmtDate(w.added)}</span>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════
+//  BOOT — load data then render everything
+// ═══════════════════════════════════════════
+loadData().then(localWords => {
+  // Also try to fetch vocab.json to pick up any new words added by sync.py
+  return fetch('./vocab.json')
+    .then(r => r.json())
+    .then(data => {
+      const remoteWords = (data.words || data).map(w => ({ review_history: [], ...w }));
+      const merged = mergeRemote(localWords, remoteWords);
+      if (merged.length > localWords.length) {
+        saveToLocalStorage(merged);
+      }
+      return merged;
+    })
+    .catch(() => localWords);  // offline/CORS → use local only
+}).then(words => {
+  VOCAB_DATA = words;
+  renderToday();
+  renderLibrary();
+  renderProgress();
+}).catch(err => {
+  console.error('Failed to load vocab data:', err);
+  document.getElementById('today-cards').innerHTML =
+    '<div class="loading" style="color:var(--red)">加载失败，请确认 vocab.json 存在且服务器正在运行。</div>';
+});
+</script>
+</body>
+</html>
