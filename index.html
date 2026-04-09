@@ -718,13 +718,31 @@ function saveToLocalStorage(words) {
   localStorage.setItem(LS_KEY, JSON.stringify({ words, saved_at: new Date().toISOString() }));
 }
 
-// Merge fresh vocab.json into existing localStorage data (adds new words only)
+// Merge fresh vocab.json into existing localStorage data
+// - 新词直接追加
+// - 已有词：把 remote 的非学习进度字段（audio、phonetic、example等）同步进来
 function mergeRemote(localWords, remoteWords) {
+  const PROGRESS_KEYS = new Set(['status','sm2_interval','sm2_easiness','sm2_reps','next_review','review_history']);
+  const remoteMap = new Map(remoteWords.map(w => [w.word.toLowerCase(), w]));
+  
+  const merged = localWords.map(local => {
+    const remote = remoteMap.get(local.word.toLowerCase());
+    if (!remote) return local;
+    // 保留本地学习进度，但更新 remote 的内容字段（audio、phonetic 等）
+    const updated = { ...local };
+    for (const [k, v] of Object.entries(remote)) {
+      if (!PROGRESS_KEYS.has(k)) updated[k] = v;
+    }
+    return updated;
+  });
+
+  // 追加新词
   const localKeys = new Set(localWords.map(w => w.word.toLowerCase()));
   const newWords = remoteWords
     .filter(w => !localKeys.has(w.word.toLowerCase()))
     .map(w => ({ review_history: [], ...w }));
-  return [...localWords, ...newWords];
+
+  return [...merged, ...newWords];
 }
 
 // ═══════════════════════════════════════════
