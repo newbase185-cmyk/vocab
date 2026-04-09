@@ -591,15 +591,15 @@
 </div>
 
 <div class="tabs">
-  <button class="tab-btn active" data-tab="today">🌸 今日</button>
+  <button class="tab-btn active" data-tab="progress">🌟 进度</button>
+  <button class="tab-btn" data-tab="today">🌸 今日</button>
   <button class="tab-btn" data-tab="library">📖 词汇库</button>
-  <button class="tab-btn" data-tab="progress">🌟 进度</button>
 </div>
 
 <div class="content">
 
   <!-- ═══ TODAY ═══ -->
-  <div class="panel active" id="panel-today">
+  <div class="panel" id="panel-today">
     <div id="today-browse">
       <div class="today-header">
         <div class="section-title" style="margin-bottom:0">今日推送</div>
@@ -612,7 +612,7 @@
       </div>
       <div class="divider" id="today-divider" style="display:none"></div>
       <div id="quiz-start-row" style="display:none">
-        <button class="btn btn-primary" id="btn-start-quiz">开始测验 ✦</button>
+        <button class="btn btn-primary" id="btn-start-quiz" style="font-size:20px;padding:16px 48px;border-radius:999px;letter-spacing:1px;box-shadow:0 6px 24px rgba(255,133,161,0.4);">✦ 开始测验 ✦</button>
       </div>
     </div>
 
@@ -676,7 +676,7 @@
   </div>
 
   <!-- ═══ PROGRESS ═══ -->
-  <div class="panel" id="panel-progress">
+  <div class="panel active" id="panel-progress">
     <div class="stats-grid">
       <div class="stat-card">
         <div class="num" id="stat-total">—</div>
