@@ -1,0 +1,65 @@
+{
+  "words": [
+    {
+      "word": "on the same page",
+      "phonetic": "",
+      "chinese": "对某件事达成共识、理解一致",
+      "scene": "开会、合作讨论时确认双方理解相同",
+      "example": "Before we move forward, I want to make sure we're all on the same page about the timeline.",
+      "source": "真实商务场景",
+      "status": "new",
+      "added": "2026-04-09",
+      "next_review": "2026-04-10",
+      "sm2_interval": 1,
+      "sm2_easiness": 2.5,
+      "sm2_reps": 0,
+      "review_history": []
+    },
+    {
+      "word": "make a point",
+      "phonetic": "",
+      "chinese": "表达一个观点；特意做某件事",
+      "scene": "讨论中强调某事，或刻意做某事",
+      "example": "She made a point of thanking everyone individually after the meeting.",
+      "source": "真实商务场景",
+      "status": "new",
+      "added": "2026-04-09",
+      "next_review": "2026-04-10",
+      "sm2_interval": 1,
+      "sm2_easiness": 2.5,
+      "sm2_reps": 0,
+      "review_history": []
+    },
+    {
+      "word": "nail it",
+      "phonetic": "",
+      "chinese": "做得非常好、完全搞定",
+      "scene": "口语，称赞某人或自我评价",
+      "example": "You nailed that presentation — the client loved it.",
+      "source": "真实商务场景",
+      "status": "new",
+      "added": "2026-04-09",
+      "next_review": "2026-04-10",
+      "sm2_interval": 1,
+      "sm2_easiness": 2.5,
+      "sm2_reps": 0,
+      "review_history": []
+    },
+    {
+      "word": "endeavor",
+      "phonetic": "ɪnˈdevə(r)",
+      "chinese": "努力；尽力做某事",
+      "scene": "正式场合，比 try 更有分量",
+      "example": "We must endeavor to close that gap.",
+      "source": "TED Talk",
+      "status": "new",
+      "added": "2026-04-09",
+      "next_review": "2026-04-09",
+      "sm2_interval": 1,
+      "sm2_easiness": 2.5,
+      "sm2_reps": 0,
+      "review_history": []
+    }
+  ],
+  "last_updated": "2026-04-09"
+}
