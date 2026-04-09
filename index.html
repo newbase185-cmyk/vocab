@@ -601,17 +601,10 @@
   <!-- ═══ TODAY ═══ -->
   <div class="panel" id="panel-today">
     <div id="today-browse">
-      <div id="quiz-start-row" style="display:none;text-align:center;margin-bottom:20px;">
-        <button class="btn btn-primary" id="btn-start-quiz" style="font-size:20px;padding:16px 48px;border-radius:999px;letter-spacing:1px;box-shadow:0 6px 24px rgba(255,133,161,0.4);">✦ 开始测验 ✦</button>
-      </div>
-      <div class="today-header">
-        <div class="section-title" style="margin-bottom:0">今日推送</div>
-        <span class="today-count" id="today-count"></span>
-      </div>
-      <div id="today-cards"><div class="loading">加载中…</div></div>
-      <div id="today-empty" class="empty-today" style="display:none">
-        <div class="emoji">🌸</div>
-        <p>今天没有新词，继续保持！</p>
+      <div style="text-align:center;padding:48px 24px 32px;">
+        <div style="font-size:52px;margin-bottom:12px;">🌸</div>
+        <div id="today-count" style="font-size:15px;color:var(--text2);margin-bottom:32px;font-family:'Nunito',sans-serif;"></div>
+        <button class="btn btn-primary" id="btn-start-quiz" style="font-size:22px;padding:18px 56px;border-radius:999px;letter-spacing:1px;box-shadow:0 8px 28px rgba(255,133,161,0.45);">✦ 开始测验 ✦</button>
       </div>
     </div>
 
@@ -625,10 +618,12 @@
           <div class="quiz-hint">点击查看释义 ✿</div>
           <button class="btn btn-ghost quiz-show-btn" id="btn-show-answer">查看释义</button>
           <div class="quiz-reveal" id="q-reveal">
+            <div class="phonetic" id="q-phonetic" style="text-align:center;margin-bottom:6px;font-size:14px;"></div>
             <div class="chinese-meaning" id="q-cn"></div>
-            <div class="meta-item">
+            <div class="meta-item" style="margin-top:12px;">
               <span class="meta-label">例句</span>
               <span class="meta-value example-text" id="q-example"></span>
+              <span id="q-example-speak"></span>
             </div>
           </div>
           <div class="quiz-actions" id="quiz-actions" style="display:none">
@@ -705,6 +700,13 @@
       <h3>✦ 词汇状态分布</h3>
       <div class="chart-container">
         <canvas id="statusChart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-wrap" style="margin-top:20px;">
+      <h3>✦ 记忆曲线（复习间隔分布）</h3>
+      <div class="chart-container">
+        <canvas id="memoryChart"></canvas>
       </div>
     </div>
 
@@ -905,25 +907,14 @@ function renderToday() {
     w.status === 'new' || (w.next_review && w.next_review <= today)
   );
 
-  const container = document.getElementById('today-cards');
-  const emptyEl   = document.getElementById('today-empty');
-  const countEl   = document.getElementById('today-count');
-  const divider   = document.getElementById('today-divider');
-  const quizRow   = document.getElementById('quiz-start-row');
+  const countEl = document.getElementById('today-count');
 
   if (todayWords.length === 0) {
-    container.innerHTML = '';
-    emptyEl.style.display = 'block';
-    countEl.textContent = '';
-    divider.style.display = 'none';
-    quizRow.style.display = 'none';
+    countEl.innerHTML = '今天没有需要复习的词 🎉';
     return;
   }
 
-  emptyEl.style.display = 'none';
-  countEl.innerHTML = `共 <strong>${todayWords.length}</strong> 个词`;
-  divider.style.display = 'block';
-  quizRow.style.display = 'block';
+  countEl.innerHTML = `今日待复习 <strong style="color:var(--accent)">${todayWords.length}</strong> 个词`;
 
   container.innerHTML = todayWords.map((w, i) => `
     <div class="card">
@@ -975,8 +966,14 @@ function showQuizQuestion() {
   document.getElementById('q-current').textContent = quizIndex + 1;
   document.getElementById('q-total').textContent   = todayWords.length;
   document.getElementById('q-word').textContent    = w.word;
+  document.getElementById('q-phonetic').textContent = w.phonetic || '';
   document.getElementById('q-cn').textContent      = w.chinese;
   document.getElementById('q-example').textContent = w.example;
+  // 例句朗读按钮
+  const exSpeak = document.getElementById('q-example-speak');
+  exSpeak.innerHTML = w.audio_example
+    ? `<button class="speak-btn speak-example" onclick="playAudio('${w.audio_example}')" title="朗读例句">🔊</button>`
+    : '';
   document.getElementById('q-reveal').classList.remove('shown');
   document.getElementById('quiz-actions').style.display  = 'none';
   document.getElementById('btn-show-answer').style.display = 'inline-flex';
@@ -1169,6 +1166,47 @@ function renderProgress() {
         }
       },
       cutout: '65%'
+    }
+  });
+
+  // 记忆曲线图（复习间隔分布）
+  if (window._memoryChart) { window._memoryChart.destroy(); window._memoryChart = null; }
+  const intervals = { '今天': 0, '1-3天': 0, '4-7天': 0, '8-21天': 0, '21天+': 0 };
+  const today = new Date().toISOString().split('T')[0];
+  VOCAB_DATA.forEach(w => {
+    const diff = w.next_review
+      ? Math.max(0, Math.round((new Date(w.next_review) - new Date(today)) / 86400000))
+      : 0;
+    if (diff === 0) intervals['今天']++;
+    else if (diff <= 3) intervals['1-3天']++;
+    else if (diff <= 7) intervals['4-7天']++;
+    else if (diff <= 21) intervals['8-21天']++;
+    else intervals['21天+']++;
+  });
+  const mctx = document.getElementById('memoryChart').getContext('2d');
+  window._memoryChart = new Chart(mctx, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(intervals),
+      datasets: [{
+        label: '词汇数量',
+        data: Object.values(intervals),
+        backgroundColor: ['#ffb3c6','#ffd6e0','#ffaac8','#ff85a1','#e8629a'],
+        borderRadius: 10,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} 个词` } }
+      },
+      scales: {
+        x: { ticks: { color: '#a07080', font: { family: 'Nunito', size: 12 } }, grid: { display: false } },
+        y: { ticks: { color: '#a07080', font: { family: 'Nunito', size: 12 } }, grid: { color: '#ffe0eb' } }
+      }
     }
   });
 
