@@ -59,6 +59,21 @@
       "sm2_easiness": 2.5,
       "sm2_reps": 0,
       "review_history": []
+    },
+    {
+      "word": "pull off",
+      "phonetic": "pʊl ɒf",
+      "chinese": "成功做到（困难的事）",
+      "scene": "口语，表示做成了一件不容易的事",
+      "example": "I can't believe they pulled off such a complex launch in just two weeks.",
+      "source": "真实商务场景",
+      "status": "new",
+      "added": "2026-04-09",
+      "next_review": "2026-04-09",
+      "sm2_interval": 1,
+      "sm2_easiness": 2.5,
+      "sm2_reps": 0,
+      "review_history": []
     }
   ],
   "last_updated": "2026-04-09"
