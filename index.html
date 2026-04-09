@@ -643,7 +643,7 @@ function loadData() {
       return Promise.resolve(parsed.words || parsed);
     } catch(e) { /* fall through to fetch */ }
   }
-  return fetch('./vocab.json')
+  return fetch('./vocab.json?t=' + Date.now())
     .then(r => r.json())
     .then(data => {
       // Normalise: ensure review_history exists on every word
@@ -993,7 +993,7 @@ function renderProgress() {
 // ═══════════════════════════════════════════
 loadData().then(localWords => {
   // Also try to fetch vocab.json to pick up any new words added by sync.py
-  return fetch('./vocab.json')
+  return fetch('./vocab.json?t=' + Date.now())
     .then(r => r.json())
     .then(data => {
       const remoteWords = (data.words || data).map(w => ({ review_history: [], ...w }));
