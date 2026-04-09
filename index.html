@@ -663,10 +663,13 @@
             <button class="btn btn-fuzzy" id="btn-fuzzy">~ 模糊</button>
             <button class="btn btn-nope" id="btn-nope">✕ 不知道</button>
           </div>
+          <div style="text-align:center;margin-top:16px;">
+            <button class="btn btn-ghost" id="btn-quit-quiz" style="font-size:12px;padding:6px 18px;opacity:0.6;">今天到这里 ✕</button>
+          </div>
         </div>
       </div>
       <div id="quiz-result" class="quiz-result" style="display:none">
-        <h3>测验完成 🎉</h3>
+        <h3 id="res-title">测验完成 🎉</h3>
         <p>本次复习了 <strong id="res-total"></strong> 个词汇</p>
         <div class="result-stats">
           <div class="result-stat">
@@ -682,7 +685,7 @@
             <div class="label">不知道</div>
           </div>
         </div>
-        <button class="btn btn-ghost" id="btn-quiz-done">返回今日词汇</button>
+        <button class="btn btn-ghost" id="btn-quiz-done">返回</button>
       </div>
     </div>
   </div>
@@ -946,7 +949,11 @@ function renderToday() {
     return;
   }
 
-  countEl.innerHTML = `今日待复习 <strong style="color:var(--accent)">${todayWords.length}</strong> 个词`;
+  const saved = loadQuizProgress();
+  const resumeHint = (saved && saved.index > 0)
+    ? ` · <span style="color:var(--accent)">上次到第 ${saved.index} 个，继续？</span>`
+    : '';
+  countEl.innerHTML = `今日待复习 <strong style="color:var(--accent)">${todayWords.length}</strong> 个词${resumeHint}`;
 
   container.innerHTML = todayWords.map((w, i) => `
     <div class="card">
@@ -975,16 +982,54 @@ function renderToday() {
 // ── Quiz logic ──
 let quizIndex   = 0;
 let quizResults = { know: 0, fuzzy: 0, nope: 0 };
-let quizLog     = [];   // [{wordIndex (in VOCAB_DATA), quality}]
+let quizLog     = [];
+const PROGRESS_KEY = 'quiz_progress_v1';
+
+function saveQuizProgress() {
+  const today = todayStr();
+  localStorage.setItem(PROGRESS_KEY, JSON.stringify({
+    date: today,
+    index: quizIndex,
+    results: quizResults,
+    log: quizLog.map(e => ({ word: e.word.word, quality: e.quality }))
+  }));
+}
+
+function loadQuizProgress() {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    if (!raw) return null;
+    const p = JSON.parse(raw);
+    if (p.date !== todayStr()) { localStorage.removeItem(PROGRESS_KEY); return null; }
+    return p;
+  } catch { return null; }
+}
+
+function clearQuizProgress() {
+  localStorage.removeItem(PROGRESS_KEY);
+}
 
 document.getElementById('btn-start-quiz').addEventListener('click', startQuiz);
 
 function startQuiz() {
   document.getElementById('today-browse').style.display = 'none';
   document.getElementById('quiz-container').style.display = 'block';
-  quizIndex = 0;
-  quizResults = { know: 0, fuzzy: 0, nope: 0 };
-  quizLog = [];
+
+  // 恢复上次进度
+  const saved = loadQuizProgress();
+  if (saved && saved.index > 0 && saved.index < todayWords.length) {
+    quizIndex   = saved.index;
+    quizResults = saved.results || { know: 0, fuzzy: 0, nope: 0 };
+    // 重建 quizLog（只需要 word 引用和 quality）
+    quizLog = (saved.log || []).map(e => ({
+      word: todayWords.find(w => w.word === e.word) || { word: e.word },
+      quality: e.quality
+    }));
+  } else {
+    quizIndex = 0;
+    quizResults = { know: 0, fuzzy: 0, nope: 0 };
+    quizLog = [];
+  }
   showQuizQuestion();
 }
 
@@ -1029,14 +1074,31 @@ function recordAnswer(quality) {
 
   quizLog.push({ word: todayWords[quizIndex], quality });
   quizIndex++;
+  saveQuizProgress();
 
   if (quizIndex < todayWords.length) {
     showQuizQuestion();
   } else {
     applyQuizResults();
+    clearQuizProgress();
     showQuizResult();
   }
 }
+
+// "今天到这里"按钮
+document.getElementById('btn-quit-quiz').addEventListener('click', () => {
+  // 已答的部分先应用
+  if (quizLog.length > 0) applyQuizResults();
+  saveQuizProgress();
+  // 显示中途结束的结果页
+  document.getElementById('res-title').textContent = '今天到这里 🌸';
+  document.getElementById('res-total').textContent = quizLog.length;
+  document.getElementById('res-know').textContent  = quizResults.know;
+  document.getElementById('res-fuzzy').textContent = quizResults.fuzzy;
+  document.getElementById('res-nope').textContent  = quizResults.nope;
+  document.getElementById('quiz-body').style.display   = 'none';
+  document.getElementById('quiz-result').style.display = 'block';
+});
 
 document.getElementById('btn-know').addEventListener('click',  () => recordAnswer(5));
 document.getElementById('btn-fuzzy').addEventListener('click', () => recordAnswer(3));
@@ -1081,7 +1143,6 @@ function showQuizResult() {
 document.getElementById('btn-quiz-done').addEventListener('click', () => {
   document.getElementById('quiz-container').style.display  = 'none';
   document.getElementById('today-browse').style.display = 'block';
-  // Re-render with updated data
   renderToday();
   renderProgress();
 });
